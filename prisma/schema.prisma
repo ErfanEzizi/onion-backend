@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id  String   @id @default(cuid())
+  name String
+  email String @unique
+  role Role @default(CLIENT)
+  location  Unsupported("point")?
+  bookings  Booking[]
+  reviews   Review[]
+}
+
+
+
+enum Role {
+  CLIENT
+  PHOTOGRAPHER
+}
+
+model Photographer {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  specialties  String[]
+  experience  Int
+  rates       Float
+  portfolio   String[]
+  isAvailable Boolean @default(false)
+  bookings    Booking[]
+  reviews     Review[]
+}
+
+model Booking {
+  id          String   @id @default(cuid())
+  clientId    String
+  photographerId String
+  serviceType String
+  date        DateTime
+  time        DateTime
+  location    Unsupported("point")?  // Can be Prisma Point type for geolocation
+  status      BookingStatus
+  client      User     @relation(fields: [clientId], references: [id])
+  photographer Photographer  @relation(fields: [photographerId], references: [id])
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  clientId    String
+  photographerId String
+  rating      Int
+  text        String?
+  client      User     @relation(fields: [clientId], references: [id])
+  photographer Photographer  @relation(fields: [photographerId], references: [id])
+}
